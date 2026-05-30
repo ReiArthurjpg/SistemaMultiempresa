@@ -36,7 +36,7 @@ services:
       DATABASE_URL: mysql://nexora:nexora@mysql:3306/nexora
       REDIS_URL: redis://redis:6379
       PORT: 8007
-    ports: ["8007:8007"]
+    ports: ["8008:8007"]
     depends_on:
       mysql: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -48,7 +48,7 @@ services:
     container_name: nexora_frontend
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8007
+      NEXT_PUBLIC_API_URL: http://localhost:8008
     ports: ["3000:3000"]
     depends_on: [backend]
   phpmyadmin:

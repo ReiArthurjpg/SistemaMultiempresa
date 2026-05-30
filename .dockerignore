@@ -1,0 +1,10 @@
+node_modules
+**/node_modules
+apps/frontend/.next
+apps/frontend/out
+apps/backend/dist
+packages/shared-types/dist
+.git
+.gitignore
+.env
+*.log
