@@ -1,0 +1,4 @@
+import Link from 'next/link';
+import type { ReactNode } from 'react';
+const items = [['/dashboard','Dashboard'],['/companies','Empresas'],['/users','Usuários'],['/plans','Planos'],['/credits','Créditos'],['/permissions','Permissões'],['/audit','Auditoria']];
+export function AppShell({ children, title }: { children: ReactNode; title: string }) { return <div className="flex min-h-screen"><aside className="w-72 bg-slate-950 p-6 text-white"><div className="mb-8 text-2xl font-bold">Nexora</div><nav className="space-y-2">{items.map(([href,label]) => <Link key={href} className="block rounded-xl px-3 py-2 hover:bg-white/10" href={href}>{label}</Link>)}</nav></aside><main className="flex-1 p-8"><header className="mb-8 flex items-center justify-between"><div><p className="text-sm text-slate-500">Nexora / {title}</p><h1 className="text-3xl font-bold">{title}</h1></div><Link className="btn" href="/login">Login</Link></header>{children}</main></div>; }

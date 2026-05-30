@@ -1,0 +1,6 @@
+'use client';
+import { useQuery } from '@tanstack/react-query';
+import { AppShell } from '@/components/layout/app-shell';
+import { Card } from '@/components/ui/card';
+import { listResource } from '@/lib/api';
+export default function DashboardPage() { const { data } = useQuery({ queryKey: ['dashboard'], queryFn: () => listResource('/dashboard') }); const cards = [['Total Empresas', data?.totalCompanies ?? 0], ['Total Usuários', data?.totalUsers ?? 0], ['Créditos Consumidos', data?.creditsConsumed ?? 0], ['Créditos Disponíveis', data?.creditsAvailable ?? 0]]; return <AppShell title="Dashboard"><div className="grid gap-4 md:grid-cols-4">{cards.map(([label,value]) => <Card key={label as string}><p className="text-sm text-slate-500">{label}</p><strong className="text-3xl">{value}</strong></Card>)}</div><div className="mt-6 grid gap-6 lg:grid-cols-2"><Card title="Consumo de créditos"><div className="flex h-56 items-end gap-3">{[30,55,40,80,65,90].map((h,i)=><div key={i} className="flex-1 rounded-t-xl bg-slate-900" style={{height:`${h}%`}} />)}</div></Card><Card title="Últimos logs"><pre className="overflow-auto text-xs">{JSON.stringify(data?.latestLogs ?? [], null, 2)}</pre></Card></div></AppShell>; }

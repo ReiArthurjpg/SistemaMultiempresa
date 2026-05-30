@@ -1,0 +1,67 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: nexora_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: nexora
+      MYSQL_USER: nexora
+      MYSQL_PASSWORD: nexora
+    ports: ["3306:3306"]
+    volumes: [mysql_data:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-unexora", "-pnexora"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    container_name: nexora_redis
+    restart: unless-stopped
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: nexora_backend
+    restart: unless-stopped
+    env_file: apps/backend/.env.example
+    environment:
+      DATABASE_URL: mysql://nexora:nexora@mysql:3306/nexora
+      REDIS_URL: redis://redis:6379
+      PORT: 8007
+    ports: ["8007:8007"]
+    depends_on:
+      mysql: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    command: sh -c "npx prisma db push && npx prisma db seed && npm run start:prod"
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    container_name: nexora_frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8007
+    ports: ["3000:3000"]
+    depends_on: [backend]
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: nexora_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: nexora
+      PMA_PASSWORD: nexora
+    ports: ["8080:80"]
+    depends_on:
+      mysql: {condition: service_healthy}
+volumes:
+  mysql_data:
