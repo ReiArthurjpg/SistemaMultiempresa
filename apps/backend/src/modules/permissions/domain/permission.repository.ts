@@ -1,0 +1,2 @@
+export const IPermissionsRepository = Symbol('IPermissionsRepository');
+export interface IPermissionsRepository { list(params?: { take?: number; cursor?: string; companyId?: string }): Promise<unknown[]>; get(id: string): Promise<unknown>; create(data: Record<string, unknown>): Promise<unknown>; update(id: string, data: Record<string, unknown>): Promise<unknown>; }

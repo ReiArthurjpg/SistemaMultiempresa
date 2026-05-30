@@ -1,0 +1,2 @@
+-- Initial Nexora schema generated from prisma/schema.prisma.
+-- Use `npx prisma migrate dev` to regenerate when evolving the model.

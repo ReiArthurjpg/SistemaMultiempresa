@@ -1,0 +1,194 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "mysql" url = env("DATABASE_URL") }
+
+enum UserRole { MASTER ADMIN OPERATOR }
+enum CompanyStatus { ACTIVE BLOCKED SUSPENDED }
+enum CreditTransactionType { ADD USE REFUND TRANSFER }
+enum PermissionAction { VIEW CREATE UPDATE DELETE EXPORT IMPORT APPROVE CANCEL RELEASE_CREDIT CONSULT GENERATE_MAILING SEND_WHATSAPP BUY_CREDITS DISTRIBUTE_CREDITS ACCESS_SETTINGS }
+enum IpRestrictionType { ANYWHERE RESTRICTED }
+
+model Company {
+  id String @id @default(cuid())
+  planId String?
+  name String
+  slug String @unique
+  domain String? @unique
+  logoUrl String?
+  status CompanyStatus @default(ACTIVE)
+  settings Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  plan Plan? @relation(fields: [planId], references: [id])
+  users User[]
+  departments Department[]
+  credits Credit?
+  creditTransactions CreditTransaction[]
+  auditLogs AuditLog[]
+  @@index([planId])
+  @@index([status, createdAt])
+}
+
+model Plan {
+  id String @id @default(cuid())
+  name String @unique
+  description String?
+  limits Json?
+  isGlobal Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  companies Company[]
+  permissions PlanPermission[]
+}
+
+model Menu {
+  id String @id @default(cuid())
+  companyId String?
+  parentId String?
+  name String
+  slug String
+  path String?
+  icon String?
+  sortOrder Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  parent Menu? @relation("MenuTree", fields: [parentId], references: [id])
+  children Menu[] @relation("MenuTree")
+  permissions MenuPermission[]
+  planPermissions PlanPermission[]
+  @@unique([companyId, slug])
+  @@index([companyId, parentId])
+}
+
+model Permission {
+  id String @id @default(cuid())
+  companyId String?
+  name String
+  action PermissionAction
+  description String?
+  createdAt DateTime @default(now())
+  menuPermissions MenuPermission[]
+  departmentPermissions DepartmentPermission[]
+  @@unique([companyId, action, name])
+  @@index([companyId, action])
+}
+
+model MenuPermission {
+  id String @id @default(cuid())
+  companyId String?
+  menuId String
+  permissionId String
+  createdAt DateTime @default(now())
+  menu Menu @relation(fields: [menuId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+  @@unique([menuId, permissionId])
+  @@index([companyId])
+}
+
+model PlanPermission {
+  id String @id @default(cuid())
+  planId String
+  menuId String
+  action PermissionAction
+  createdAt DateTime @default(now())
+  plan Plan @relation(fields: [planId], references: [id])
+  menu Menu @relation(fields: [menuId], references: [id])
+  @@unique([planId, menuId, action])
+}
+
+model Department {
+  id String @id @default(cuid())
+  companyId String?
+  name String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  company Company? @relation(fields: [companyId], references: [id])
+  users User[]
+  permissions DepartmentPermission[]
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+model DepartmentPermission {
+  id String @id @default(cuid())
+  departmentId String
+  permissionId String
+  createdAt DateTime @default(now())
+  department Department @relation(fields: [departmentId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+  @@unique([departmentId, permissionId])
+}
+
+model User {
+  id String @id @default(cuid())
+  companyId String?
+  departmentId String?
+  name String
+  email String @unique
+  passwordHash String
+  role UserRole @default(OPERATOR)
+  isActive Boolean @default(true)
+  twoFactorEnabled Boolean @default(false)
+  failedLoginAttempts Int @default(0)
+  lockedUntil DateTime?
+  lastLoginAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  company Company? @relation(fields: [companyId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+  refreshTokens RefreshToken[]
+  twoFactorSecret TwoFactorSecret?
+  allowedIps AllowedIp[]
+  accessSchedules AccessSchedule[]
+  creditTransactions CreditTransaction[]
+  auditLogs AuditLog[]
+  @@index([companyId, role])
+  @@index([email])
+  @@index([createdAt])
+}
+
+model Credit { id String @id @default(cuid()) companyId String @unique balance Decimal @default(0) updatedAt DateTime @updatedAt company Company @relation(fields: [companyId], references: [id]) }
+
+model CreditTransaction {
+  id String @id @default(cuid())
+  companyId String
+  userId String?
+  amount Decimal
+  transactionType CreditTransactionType
+  description String
+  metadata Json?
+  createdAt DateTime @default(now())
+  company Company @relation(fields: [companyId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+  @@index([companyId, createdAt])
+  @@index([userId, createdAt])
+  @@index([transactionType])
+}
+
+model AuditLog {
+  id String @id @default(cuid())
+  companyId String?
+  userId String?
+  action String
+  entity String
+  entityId String?
+  ip String?
+  userAgent String?
+  metadata Json?
+  createdAt DateTime @default(now())
+  company Company? @relation(fields: [companyId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+  @@index([companyId, createdAt])
+  @@index([userId, createdAt])
+  @@index([action])
+}
+
+model AllowedIp { id String @id @default(cuid()) userId String ip String restrictionType IpRestrictionType @default(RESTRICTED) createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id]) @@index([userId]) }
+model AccessSchedule { id String @id @default(cuid()) userId String allowedDays Json startTime String endTime String createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id]) @@index([userId]) }
+model RefreshToken { id String @id @default(cuid()) userId String tokenHash String expiresAt DateTime revokedAt DateTime? replacedByTokenId String? createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id]) @@index([userId, expiresAt]) }
+model TwoFactorSecret { id String @id @default(cuid()) userId String @unique secret String verifiedAt DateTime? createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id]) }

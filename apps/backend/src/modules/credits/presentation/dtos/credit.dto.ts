@@ -1,0 +1,3 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+export class CreditOperationDto { @ApiProperty() @IsString() companyId!: string; @ApiProperty({ example: 100 }) @IsNumber() @Min(0.01) amount!: number; @ApiProperty({ enum: ['ADD','USE','REFUND','TRANSFER'], example: 'ADD' }) @IsEnum(['ADD','USE','REFUND','TRANSFER']) transactionType!: 'ADD'|'USE'|'REFUND'|'TRANSFER'; @ApiProperty({ example: 'Carga inicial de créditos' }) @IsString() description!: string; @ApiProperty({ required: false }) @IsOptional() @IsString() userId?: string; }

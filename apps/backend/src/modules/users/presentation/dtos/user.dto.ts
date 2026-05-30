@@ -1,0 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+export class CreateUserDto { @ApiProperty({ example: 'Operador Demo' }) @IsString() name!: string; @ApiProperty({ example: 'operador@nexora.local' }) @IsEmail() email!: string; @ApiProperty({ example: 'Admin@123' }) @IsString() @MinLength(8) password!: string; @ApiProperty({ enum: ['MASTER','ADMIN','OPERATOR'], example: 'OPERATOR' }) @IsEnum(['MASTER','ADMIN','OPERATOR']) role!: 'MASTER'|'ADMIN'|'OPERATOR'; @ApiPropertyOptional() @IsOptional() @IsString() companyId?: string; }
+export class UpdateUserDto { @ApiPropertyOptional() @IsOptional() @IsString() name?: string; @ApiPropertyOptional({ enum: ['MASTER','ADMIN','OPERATOR'] }) @IsOptional() @IsEnum(['MASTER','ADMIN','OPERATOR']) role?: 'MASTER'|'ADMIN'|'OPERATOR'; }
