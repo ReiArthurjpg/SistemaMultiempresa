@@ -1,4 +1,4 @@
-# Nexora SaaS Multiempresa
+# SaaS Multiempresa
 
 Base enterprise white label para operação multiempresa com autenticação JWT/Refresh Token, 2FA, RBAC + ABAC, ledger de créditos, auditoria, planos, menus dinâmicos e frontend operacional.
 
